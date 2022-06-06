@@ -23,7 +23,7 @@ class Products(Resource):
         html = etree.HTML(r.content)
         error = html.xpath('//*[@id="colunmNotice"]/div/p[1]')
         if error:
-            return {"error": 'Episode not found'}, 404
+            return {"error": 'Episode not found'}, 404, { "Access-Control-Allow-Origin": "*" }
         # 取得資料
         subject_id = html.xpath('//*[@id="headerSubject"]/h1/a/@href')[0].lstrip('/subject/')
         comment_list = html.xpath('//*[@id="comment_list"]/div/@name')
@@ -38,7 +38,7 @@ class Products(Resource):
                 reply_data['from_name'] = html.xpath(f'//div[@name="{r}"]/div[2]/strong/a/text()')[0]
                 reply_data['from_link'] = "https://bgm.tv" + html.xpath(f'//div[@name="{r}"]/div[2]/strong/a/@href')[0]
                 reply_data['from_avatar'] = "https:" + html.xpath(f'//div[@name="{r}"]/a/span/@style')[0].lstrip("background-image:url('").rstrip("')")
-                reply_data['comment'] = tostring(html.xpath(f'//div[@name="{r}"]/div[2]/div[@class="cmt_sub_content"]')[0], encoding="utf-8").decode("utf-8").replace('<div class="cmt_sub_content">\n','').replace(' </div>\n','')
+                reply_data['comment'] = tostring(html.xpath(f'//div[@name="{r}"]/div[2]/div[@class="cmt_sub_content"]')[0], encoding="utf-8").decode("utf-8").replace('<div class="cmt_sub_content">','').rstrip(' </div>\n').replace('src="/', 'class="bgm-emoji" src="https://bgm.tv/')
                 reply_list.append(reply_data)
 
             comment_data = {}
@@ -47,7 +47,7 @@ class Products(Resource):
             comment_data["from_name"] = html.xpath(f'//div[@name="{i}"]/div[2]/strong/a/text()')[0]
             comment_data["from_link"] = "https://bgm.tv" + html.xpath(f'//div[@name="{i}"]/div[2]/strong/a/@href')[0]
             comment_data["from_avatar"] = "https:" + html.xpath(f'//div[@name="{i}"]/a/span/@style')[0].lstrip("background-image:url('").rstrip("')")
-            comment_data["comment"] = tostring(html.xpath(f'//div[@name="{i}"]/div[2]/div/div[@class="message clearit"]')[0], encoding="utf-8").decode("utf-8").replace('<div class="message clearit">\n','').replace(' </div>\n','')
+            comment_data["comment"] = tostring(html.xpath(f'//div[@name="{i}"]/div[2]/div/div[@class="message clearit"]')[0], encoding="utf-8").decode("utf-8").replace('<div class="message clearit">\n','').rstrip(' </div>\n').replace('src="/', 'class="bgm-emoji" src="https://bgm.tv/')
             comment_data["reply"] = reply_list
             comment_data_list.append(comment_data)
 
@@ -57,7 +57,7 @@ class Products(Resource):
             "comment": len(comment_list),
             "data": comment_data_list,
         }
-        return output, 200
+        return output, 200, { "Access-Control-Allow-Origin": "*" }
 
 
 # 建立API路由products，並將該路由導向Products物件
