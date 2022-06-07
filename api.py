@@ -38,7 +38,7 @@ class Products(Resource):
                 reply_data['from_name'] = html.xpath(f'//div[@name="{r}"]/div[2]/strong/a/text()')[0]
                 reply_data['from_link'] = "https://bgm.tv" + html.xpath(f'//div[@name="{r}"]/div[2]/strong/a/@href')[0]
                 reply_data['from_avatar'] = "https:" + html.xpath(f'//div[@name="{r}"]/a/span/@style')[0].lstrip("background-image:url('").rstrip("')")
-                reply_data['comment'] = tostring(html.xpath(f'//div[@name="{r}"]/div[2]/div[@class="cmt_sub_content"]')[0], encoding="utf-8").decode("utf-8").replace('<div class="cmt_sub_content">','').rstrip(' </div>\n').replace('src="/', 'class="bgm-emoji" src="https://bgm.tv/')
+                reply_data['comment'] = tostring(html.xpath(f'//div[@name="{r}"]/div[2]/div[@class="cmt_sub_content"]')[0], encoding="utf-8").decode("utf-8").replace('<div class="cmt_sub_content">','').replace(' </div>\n','').replace('src="/', 'class="bgm-emoji" src="https://bgm.tv/')
                 reply_list.append(reply_data)
 
             comment_data = {}
@@ -47,7 +47,7 @@ class Products(Resource):
             comment_data["from_name"] = html.xpath(f'//div[@name="{i}"]/div[2]/strong/a/text()')[0]
             comment_data["from_link"] = "https://bgm.tv" + html.xpath(f'//div[@name="{i}"]/div[2]/strong/a/@href')[0]
             comment_data["from_avatar"] = "https:" + html.xpath(f'//div[@name="{i}"]/a/span/@style')[0].lstrip("background-image:url('").rstrip("')")
-            comment_data["comment"] = tostring(html.xpath(f'//div[@name="{i}"]/div[2]/div/div[@class="message clearit"]')[0], encoding="utf-8").decode("utf-8").replace('<div class="message clearit">\n','').rstrip(' </div>\n').replace('src="/', 'class="bgm-emoji" src="https://bgm.tv/')
+            comment_data["comment"] = tostring(html.xpath(f'//div[@name="{i}"]/div[2]/div/div[@class="message clearit"]')[0], encoding="utf-8").decode("utf-8").replace('<div class="message clearit">\n','').replace(' </div>\n','').replace('src="/', 'class="bgm-emoji" src="https://bgm.tv/')
             comment_data["reply"] = reply_list
             comment_data_list.append(comment_data)
 
