@@ -16,8 +16,7 @@ class Products(Resource):
     def get(self, episode_id):
         # 取得資料
         headers = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36 Edg/99.0.1150.46",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36 Edg/99.0.1150.46",
         }
         r = session.get(f"https://bgm.tv/ep/{episode_id}", headers=headers)
         html = etree.HTML(r.content)
@@ -36,6 +35,10 @@ class Products(Resource):
                 reply_data['floor'] = r
                 reply_data['floor_time'] = html.xpath(f'//div[@name="{r}"]/div[1]/small/text()')[0].lstrip(' - ').rstrip(" ")
                 reply_data['from_name'] = html.xpath(f'//div[@name="{r}"]/div[2]/strong/a/text()')[0]
+                if from_tip := html.xpath(f'//div[@name="{r}"]/div[2]/span/text()'):
+                    reply_data['from_tip'] = from_tip[0].replace('(', '').replace(')', '')
+                else:
+                    reply_data['from_tip'] = None
                 reply_data['from_link'] = "https://bgm.tv" + html.xpath(f'//div[@name="{r}"]/div[2]/strong/a/@href')[0]
                 reply_data['from_avatar'] = "https:" + html.xpath(f'//div[@name="{r}"]/a/span/@style')[0].lstrip("background-image:url('").rstrip("')")
                 reply_data['comment'] = tostring(html.xpath(f'//div[@name="{r}"]/div[2]/div[@class="cmt_sub_content"]')[0], encoding="utf-8").decode("utf-8").replace('<div class="cmt_sub_content">','').replace(' </div>\n','').replace('src="/', 'class="bgm-emoji" src="https://bgm.tv/')
@@ -45,6 +48,10 @@ class Products(Resource):
             comment_data["floor"] = i
             comment_data["floor_time"] = html.xpath(f'//div[@name="{i}"]/div[1]/small/text()')[0].lstrip(' - ')
             comment_data["from_name"] = html.xpath(f'//div[@name="{i}"]/div[2]/strong/a/text()')[0]
+            if from_tip := html.xpath(f'//div[@name="{i}"]/div[2]/span/text()'):
+                comment_data['from_tip'] = from_tip[0].replace('(', '').replace(')', '')
+            else:
+                comment_data['from_tip'] = None
             comment_data["from_link"] = "https://bgm.tv" + html.xpath(f'//div[@name="{i}"]/div[2]/strong/a/@href')[0]
             comment_data["from_avatar"] = "https:" + html.xpath(f'//div[@name="{i}"]/a/span/@style')[0].lstrip("background-image:url('").rstrip("')")
             comment_data["comment"] = tostring(html.xpath(f'//div[@name="{i}"]/div[2]/div/div[@class="message clearit"]')[0], encoding="utf-8").decode("utf-8").replace('<div class="message clearit">\n','').replace(' </div>\n','').replace('src="/', 'class="bgm-emoji" src="https://bgm.tv/')
