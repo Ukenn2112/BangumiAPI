@@ -1,8 +1,10 @@
+from xml.etree.ElementTree import tostring
+
 import requests
 from flask import Flask
-from lxml import etree
 from flask_restful import Api, Resource
-from xml.etree.ElementTree import tostring
+from lxml import etree
+from waitress import serve
 
 # 創建Flask app物件
 app = Flask(__name__)
@@ -71,4 +73,4 @@ class Products(Resource):
 api.add_resource(Products, '/episodes/comments/<int:episode_id>')
 
 if __name__ == "__main__":
-    app.run('0.0.0.0', port=8080, debug=False)
+    serve(app, port=8080)
