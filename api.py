@@ -73,4 +73,4 @@ class Products(Resource):
 api.add_resource(Products, '/episodes/comments/<int:episode_id>')
 
 if __name__ == "__main__":
-    serve(app, port=8080)
+    serve(app, listen="127.0.0.1:8080")
