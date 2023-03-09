@@ -91,21 +91,10 @@ class Subject(Resource):
             else:
                 comment_data["from_score"] = None
             from_time: str = i.xpath('./div/div/small[@class="grey"]/text()')[0].replace('@', '').strip()
-            now = datetime.now(pytz.timezone('Asia/Hong_Kong'))
-            if 'm ago' in from_time:
-                if 'h' in from_time:
-                    hours, minutes = map(int, from_time.split('m ago')[0].split('h'))
-                    timestamp = (now - timedelta(hours=hours, minutes=minutes)).timestamp()
-                else:
-                    timestamp = (now - timedelta(minutes=int(from_time.split('m ago')[0]))).timestamp()
-            elif 'h ago' in from_time:
-                if 'd' in from_time:
-                    days, hours = map(int, from_time.split('h ago')[0].split('d'))
-                    timestamp = (now - timedelta(days=days, hours=hours)).timestamp()
-                else:
-                    timestamp = (now - timedelta(hours=int(from_time.split('h ago')[0]))).timestamp()
-            elif 'd ago' in from_time:
-                timestamp = (now - timedelta(days=int(from_time.split('d ago')[0]))).timestamp()
+            if 'm' in from_time or 'h' in from_time or 'd' in from_time:
+                now = datetime.now(pytz.timezone('Asia/Hong_Kong')).timestamp()
+                timestamp = from_time.replace(' ago', '').replace('d', '*86400+').replace('h', '*3600+').replace('m', '*60+')
+                timestamp = int(now - eval(timestamp[:-1]))
             else:
                 timestamp = datetime.strptime(from_time, '%Y-%m-%d %H:%M').timestamp()
             comment_data["from_time"] = int(timestamp)
