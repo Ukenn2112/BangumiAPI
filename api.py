@@ -1,7 +1,7 @@
 from xml.etree.ElementTree import tostring
 
 import requests
-from flask import Flask
+from flask import Flask, request
 from flask_restful import Api, Resource
 from lxml import etree
 from waitress import serve
@@ -12,15 +12,15 @@ app = Flask(__name__)
 api = Api(app)
 
 session = requests.session()
+session.headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+}
 
 # 創建Products 物件並繼承Resource物件
-class Products(Resource):
+class Episode(Resource):
     def get(self, episode_id):
         # 取得資料
-        headers = {
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/99.0.4844.74 Safari/537.36 Edg/99.0.1150.46",
-        }
-        r = session.get(f"https://bgm.tv/ep/{episode_id}", headers=headers)
+        r = session.get(f"https://bgm.tv/ep/{episode_id}")
         html = etree.HTML(r.content)
         error = html.xpath('//*[@id="colunmNotice"]/div/p[1]')
         if error:
@@ -69,8 +69,48 @@ class Products(Resource):
         return output, 200, { "Access-Control-Allow-Origin": "*" }
 
 
+class Subject(Resource):
+    def get(self, subject_id):
+        # 取得資料
+        page = request.args.get('page') or 1
+        r = session.get(f"https://bgm.tv/subject/{subject_id}/comments?page={page}")
+        html = etree.HTML(r.content, etree.HTMLParser(encoding='utf-8'))
+        error = html.xpath('//*[@id="colunmNotice"]/div/p[1]')
+        if error:
+            return {"error": 'Subject not found'}, 404, { "Access-Control-Allow-Origin": "*" }
+        comment_list = html.xpath('//div[@id="comment_box"]/div[@class="item clearit"]')
+        comment_data_list = []
+        for i in comment_list:
+            comment_data = {}
+            comment_data["from_name"] = i.xpath('./div/div/a/text()')[0]
+            if score := i.xpath('./div/div/span[@class="starstop-s"]/span/@class'):
+                comment_data["from_score"] = int(score[0].lstrip('starlight stars'))
+            else:
+                comment_data["from_score"] = None
+            comment_data["from_time"] = i.xpath('./div/div/small[@class="grey"]/text()')[0].replace('@', '')
+            comment_data["from_link"] = "https://bgm.tv" + i.xpath('./div/div/a/@href')[0]
+            comment_data["from_avatar"] = "https:" + i.xpath('./a[@class="avatar"]/span/@style')[0].lstrip("background-image:url('").rstrip("')")
+            comment_data["comment"] = i.xpath('./div/div[@class="text"]/p/text()')[0]
+            comment_data_list.append(comment_data)
+        if all_page := html.xpath('//div[@class="page_inner"]/a[@class="p"]'):
+            if all_page[-1].text == '››':
+                all_page = int(all_page[-2].text)
+            else:
+                all_page = int(all_page[-1].xpath('./@href')[0].replace('?page=', ''))
+        else:
+            all_page = 1
+        output = {
+            "subject_id": int(subject_id),
+            "now_page": int(page),
+            "all_page": all_page,
+            "data": comment_data_list,
+        }
+        return output, 200, { "Access-Control-Allow-Origin": "*" }
+
+
 # 建立API路由products，並將該路由導向Products物件
-api.add_resource(Products, '/episodes/comments/<int:episode_id>')
+api.add_resource(Episode, '/episodes/comments/<int:episode_id>')
+api.add_resource(Subject, '/subjects/comments/<int:subject_id>')
 
 if __name__ == "__main__":
     serve(app, listen="127.0.0.1:8080")
