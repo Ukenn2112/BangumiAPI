@@ -91,7 +91,7 @@ class Subject(Resource):
             else:
                 comment_data["from_score"] = None
             from_time: str = i.xpath('./div/div/small[@class="grey"]/text()')[0].replace('@', '').strip()
-            if 'm' in from_time or 'h' in from_time or 'd' in from_time:
+            if 'ago' in from_time:
                 now = datetime.now(pytz.timezone('Asia/Hong_Kong')).timestamp()
                 timestamp = from_time.replace(' ago', '').replace('d', '*86400+').replace('h', '*3600+').replace('m', '*60+')
                 timestamp = int(now - eval(timestamp[:-1]))
