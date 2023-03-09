@@ -1,5 +1,6 @@
 from xml.etree.ElementTree import tostring
-
+from datetime import datetime, timedelta
+import pytz
 import requests
 from flask import Flask, request
 from flask_restful import Api, Resource
@@ -35,7 +36,8 @@ class Episode(Resource):
             for r in reply_comment_list:
                 reply_data = {}
                 reply_data['floor'] = r
-                reply_data['floor_time'] = html.xpath(f'//div[@name="{r}"]/div[1]/small/text()')[0].lstrip(' - ').rstrip(" ")
+                floor_time = html.xpath(f'//div[@name="{r}"]/div[1]/small/text()')[0].lstrip(' - ').rstrip(" ")
+                reply_data['floor_time'] = int(datetime.strptime(floor_time, '%Y-%m-%d %H:%M').timestamp())
                 reply_data['from_name'] = html.xpath(f'//div[@name="{r}"]/div[2]/strong/a/text()')[0]
                 if from_tip := html.xpath(f'//div[@name="{r}"]/div[2]/span/text()'):
                     reply_data['from_tip'] = from_tip[0].replace('(', '').replace(')', '')
@@ -48,7 +50,8 @@ class Episode(Resource):
 
             comment_data = {}
             comment_data["floor"] = i
-            comment_data["floor_time"] = html.xpath(f'//div[@name="{i}"]/div[1]/small/text()')[0].lstrip(' - ')
+            floor_timee = html.xpath(f'//div[@name="{i}"]/div[1]/small/text()')[0].lstrip(' - ')
+            comment_data["floor_time"] = int(datetime.strptime(floor_timee, '%Y-%m-%d %H:%M').timestamp())
             comment_data["from_name"] = html.xpath(f'//div[@name="{i}"]/div[2]/strong/a/text()')[0]
             if from_tip := html.xpath(f'//div[@name="{i}"]/div[2]/span/text()'):
                 comment_data['from_tip'] = from_tip[0].replace('(', '').replace(')', '')
@@ -87,7 +90,25 @@ class Subject(Resource):
                 comment_data["from_score"] = int(score[0].lstrip('starlight stars'))
             else:
                 comment_data["from_score"] = None
-            comment_data["from_time"] = i.xpath('./div/div/small[@class="grey"]/text()')[0].replace('@', '').strip()
+            from_time: str = i.xpath('./div/div/small[@class="grey"]/text()')[0].replace('@', '').strip()
+            now = datetime.now(pytz.timezone('Asia/Hong_Kong'))
+            if 'm ago' in from_time:
+                if 'h' in from_time:
+                    hours, minutes = map(int, from_time.split('m ago')[0].split('h'))
+                    timestamp = (now - timedelta(hours=hours, minutes=minutes)).timestamp()
+                else:
+                    timestamp = (now - timedelta(minutes=int(from_time.split('m ago')[0]))).timestamp()
+            elif 'h ago' in from_time:
+                if 'd' in from_time:
+                    days, hours = map(int, from_time.split('h ago')[0].split('d'))
+                    timestamp = (now - timedelta(days=days, hours=hours)).timestamp()
+                else:
+                    timestamp = (now - timedelta(hours=int(from_time.split('h ago')[0]))).timestamp()
+            elif 'd ago' in from_time:
+                timestamp = (now - timedelta(days=int(from_time.split('d ago')[0]))).timestamp()
+            else:
+                timestamp = datetime.strptime(from_time, '%Y-%m-%d %H:%M').timestamp()
+            comment_data["from_time"] = int(timestamp)
             comment_data["from_link"] = "https://bgm.tv" + i.xpath('./div/div/a/@href')[0]
             comment_data["from_avatar"] = "https:" + i.xpath('./a[@class="avatar"]/span/@style')[0].lstrip("background-image:url('").rstrip("')")
             comment_data["comment"] = i.xpath('./div/div[@class="text"]/p/text()')[0]
