@@ -87,7 +87,7 @@ class Subject(Resource):
                 comment_data["from_score"] = int(score[0].lstrip('starlight stars'))
             else:
                 comment_data["from_score"] = None
-            comment_data["from_time"] = i.xpath('./div/div/small[@class="grey"]/text()')[0].replace('@', '')
+            comment_data["from_time"] = i.xpath('./div/div/small[@class="grey"]/text()')[0].replace('@', '').strip()
             comment_data["from_link"] = "https://bgm.tv" + i.xpath('./div/div/a/@href')[0]
             comment_data["from_avatar"] = "https:" + i.xpath('./a[@class="avatar"]/span/@style')[0].lstrip("background-image:url('").rstrip("')")
             comment_data["comment"] = i.xpath('./div/div[@class="text"]/p/text()')[0]
