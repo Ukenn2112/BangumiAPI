@@ -1,5 +1,6 @@
+from datetime import datetime
 from xml.etree.ElementTree import tostring
-from datetime import datetime, timedelta
+
 import pytz
 import requests
 from flask import Flask, request
@@ -36,7 +37,7 @@ class Episode(Resource):
             for r in reply_comment_list:
                 reply_data = {}
                 reply_data['floor'] = r
-                floor_time = html.xpath(f'//div[@name="{r}"]/div[1]/small/text()')[0].lstrip(' - ').rstrip(" ")
+                floor_time = html.xpath(f'//div[@name="{r}"]/div[1]/div/small/text()')[0].lstrip(' - ').rstrip(" ")
                 reply_data['floor_time'] = int(datetime.strptime(floor_time, '%Y-%m-%d %H:%M').timestamp())
                 reply_data['from_name'] = html.xpath(f'//div[@name="{r}"]/div[2]/strong/a/text()')[0]
                 if from_tip := html.xpath(f'//div[@name="{r}"]/div[2]/span/text()'):
@@ -50,7 +51,7 @@ class Episode(Resource):
 
             comment_data = {}
             comment_data["floor"] = i
-            floor_timee = html.xpath(f'//div[@name="{i}"]/div[1]/small/text()')[0].lstrip(' - ')
+            floor_timee = html.xpath(f'//div[@name="{i}"]/div[1]/div/small/text()')[0].lstrip(' - ')
             comment_data["floor_time"] = int(datetime.strptime(floor_timee, '%Y-%m-%d %H:%M').timestamp())
             comment_data["from_name"] = html.xpath(f'//div[@name="{i}"]/div[2]/strong/a/text()')[0]
             if from_tip := html.xpath(f'//div[@name="{i}"]/div[2]/span/text()'):
